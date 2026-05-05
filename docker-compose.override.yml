@@ -14,7 +14,7 @@ services:
       POSTGRES_DB: dic_db
     volumes:
       - db_data_dev:/var/lib/postgresql/data
-      - ./scheme.sql:/docker-entrypoint-initdb.d/scheme.sql
+      - ./01-scheme.sql:/docker-entrypoint-initdb.d/01-scheme.sql
 
 
 volumes:

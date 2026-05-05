@@ -19,7 +19,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     configs:
       - source: db_schema
-        target: /docker-entrypoint-initdb.d/scheme.sql
+        target: /docker-entrypoint-initdb.d/01-scheme.sql
     deploy:
       placement:
         constraints:
@@ -38,7 +38,7 @@ networks:
 
 configs:
   db_schema:
-    file: ./scheme.sql
+    file: ./01-scheme.sql
 
 secrets:
   db_password:
