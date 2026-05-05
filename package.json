@@ -21,15 +21,13 @@
   "type": "commonjs",
   "main": "server.js",
   "scripts": {
-    "test": "node --test"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "express": "^5.2.1",
-    "memcached": "^2.2.2"
-  },
-  "scripts": {
-      "start": "node server.js",
-      "dev": "nodemon server.js"
+    "memcached": "^2.2.2",
+    "pg": "^8.20.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
