@@ -17,6 +17,9 @@ services:
       - db_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    configs:
+      - source: db_schema
+        target: /docker-entrypoint-initdb.d/scheme.sql
     deploy:
       placement:
         constraints:
@@ -32,6 +35,10 @@ networks:
   swarm_net:
     driver: overlay
     attachable: true
+
+configs:
+  db_schema:
+    file: ./scheme.sql
 
 secrets:
   db_password:
