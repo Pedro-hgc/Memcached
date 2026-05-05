@@ -1,6 +1,6 @@
 const express = require('express')
 const app = express()
-const port = process.env.PORT || 8080
+const port = process.env.PORT || 80
 
 const memcached = process.env.MEMCACHED_URL || 'cache:11211'
 const database  = process.env.DB_HOST || 'db'

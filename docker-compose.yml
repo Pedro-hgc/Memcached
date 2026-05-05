@@ -1,6 +1,6 @@
 services:
   web:
-    image: dicapi-backend:latest
+    image: lluuiizzz/dicapi-backend:latest
     command: npm run dev
     volumes:
       - ./:/usr/src/app
@@ -8,7 +8,7 @@ services:
     networks:
       - swarm_net
     ports:
-      - "8080:8080"
+      - "80:80"
     environment:
       - MEMCACHED_URL=cache:11211
       - DB_HOST=db
