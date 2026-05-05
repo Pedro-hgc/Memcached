@@ -12,6 +12,4 @@ services:
       POSTGRES_USER: dev_admin
       POSTGRES_PASSWORD: dev_password
       POSTGRES_DB: dic_db
-    ports:
-      - "5432:5432"
 
