@@ -26,6 +26,11 @@ services:
         constraints:
           - node.labels.is-cache == true
 
+networks:
+  swarm_net:
+    driver: overlay
+    attachable: true
+
 secrets:
   db_password:
     external: true
