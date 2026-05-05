@@ -1,0 +1,48 @@
+services:
+  web:
+    ports:
+      - "80:8080"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.is-web == true
+    secrets:
+      - db_password
+  db:
+    environment:
+      POSTGRES_DB: dic_db
+      POSTGRES_USER: dev_admin
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    configs:
+      - source: db_schema
+        target: /docker-entrypoint-initdb.d/01-scheme.sql
+    deploy:
+      placement:
+        constraints:
+          - node.labels.is-db == true
+  cache:
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.is-cache == true
+
+networks:
+  swarm_net:
+    driver: overlay
+    attachable: true
+
+configs:
+  db_schema:
+    file: ./01-scheme.sql
+
+secrets:
+  db_password:
+    external: true
+
+volumes:
+  postgres_data:

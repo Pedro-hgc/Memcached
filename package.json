@@ -1,0 +1,35 @@
+{
+  "name": "dictionary-api",
+  "version": "0.0.1",
+  "description": "The API to retrieve english dictionary entries.",
+  "keywords": [
+    "dictionary",
+    "english",
+    "words",
+    "meaning"
+  ],
+  "homepage": "https://github.com/Pedro-hgc/Memcached#readme",
+  "bugs": {
+    "url": "https://github.com/Pedro-hgc/Memcached/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pedro-hgc/Memcached.git"
+  },
+  "license": "MIT",
+  "author": "Luiz Guilherme C. Silva, Pedro Campos, Brenda.",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1",
+    "memcached": "^2.2.2",
+    "pg": "^8.20.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

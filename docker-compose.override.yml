@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    command: npm run dev
+    volumes:
+      - ./:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - "8080:8080"
+  db:
+    environment:
+      POSTGRES_USER: dev_admin
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: dic_db
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+      - ./01-scheme.sql:/docker-entrypoint-initdb.d/01-scheme.sql
+
+
+volumes:
+  db_data_dev:
+
+
