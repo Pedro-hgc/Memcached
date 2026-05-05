@@ -16,7 +16,5 @@ services:
       - swarm_net
 
 networks:
-  swarm_net:
-    driver: overlay
-    attachable: true
+  swarm_net: {}
 
