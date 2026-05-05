@@ -6,10 +6,12 @@ services:
       placement:
         constraints:
           - node.labels.is-web == true
+    secrets:
+      - db_password
   db:
     environment:
-      POSTGRES_USER: dev_admin
       POSTGRES_DB: dic_db
+      POSTGRES_USER: dev_admin
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     secrets:
       - db_password
