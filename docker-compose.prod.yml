@@ -1,0 +1,34 @@
+services:
+  web:
+    ports:
+      - "80:8080"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.is-web == true
+  db:
+    environment:
+      POSTGRES_USER: dev_admin
+      POSTGRES_DB: dic_db
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    deploy:
+      placement:
+        constraints:
+          - node.labels.is-db == true
+  cache:
+    deploy:
+      endpoint_mode: dnsrr
+      placement:
+        constraints:
+          - node.labels.is-cache == true
+
+secrets:
+  db_password:
+    external: true
+
+volumes:
+  postgres_data:
