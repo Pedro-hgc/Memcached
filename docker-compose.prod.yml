@@ -20,6 +20,10 @@ services:
     configs:
       - source: db_schema
         target: /docker-entrypoint-initdb.d/01-scheme.sql
+      - source: db_populate
+        target: /docker-entrypoint-initdb.d/02-populate.sql
+      - source: db_data
+        target: /docker-entrypoint-initdb.d/data.json
     deploy:
       placement:
         constraints:
@@ -39,6 +43,10 @@ networks:
 configs:
   db_schema:
     file: ./01-scheme.sql
+  db_populate:
+    file: ./02-populate.sql
+  db_data:
+    file: ./sample-data.json
 
 secrets:
   db_password:
