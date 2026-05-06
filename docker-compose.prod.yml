@@ -9,6 +9,7 @@ services:
     secrets:
       - db_password
   db:
+    image: lluuiizzz/db-server:latest
     environment:
       POSTGRES_DB: dic_db
       POSTGRES_USER: dev_admin
