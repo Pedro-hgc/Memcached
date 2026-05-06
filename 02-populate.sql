@@ -4,7 +4,7 @@ WITH json_file AS (
     SELECT 
         key AS word_term, 
         value AS word_data 
-    FROM json_each(pg_read_file('/docker-entrypoint-initdb.d/data.json')::json)
+    FROM json_each(pg_read_file('/docker-entrypoint-initdb.d/sample-data.json')::json)
 ),
 inserted_words AS (
     -- 2. Insert into the main 'words' table and capture the new IDs.

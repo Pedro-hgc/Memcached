@@ -16,7 +16,7 @@ services:
       - db_data_dev:/var/lib/postgresql/data
       - ./01-scheme.sql:/docker-entrypoint-initdb.d/01-scheme.sql
       - ./02-populate.sql:/docker-entrypoint-initdb.d/02-populate.sql
-      - ./sample-data.json:/docker-entrypoint-initdb.d/data.json
+      - ./sample-data.json:/docker-entrypoint-initdb.d/sample-data.json
 
 
 volumes:
