@@ -89,6 +89,10 @@ async function getSpecificWord(word) {
     }
 }
 
-module.exports = {getAllWords, createWordWithMeaning, getSpecificWord}
+async function updateSpecificWord(patch_word) {
+    return patch_word
+}
+
+module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, updateSpecificWord}
 
 
