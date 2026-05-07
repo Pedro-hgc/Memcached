@@ -27,83 +27,126 @@ const pool = new Pool({
 app.use(express.json( {limit: '50mb'} ))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
-app.post('/words', async (req, res) => {
-    // 1. Validação básica de presença
-    if (!req.body.word || !req.body.meaning) {
-        return res.status(400).send("Your Body Request needs defined word and meaning params.\n");
-    }
+app.route('/words')
+    .get (async (req, res) => {
+        const client = await pool.connect()
+        try {
+            await client.query('BEGIN')
 
-    // 2. Validação Zod
-    const parse_word = Word.safeParse(req.body.word);
-    const parse_meaning = Meaning.safeParse(req.body.meaning);
+            const words_query = 'SELECT * FROM words'
+            const words_response = await client.query(words_query)
 
-    if (!parse_word.success) return res.status(400).send(parse_word.error.message);
-    if (!parse_meaning.success) return res.status(400).send(parse_meaning.error.message);
+            var api_response = {
+                words: words_response.rows,
+                meanings: []
+            }
 
-    const client = await pool.connect(); 
+            for (const word of api_response.words) {
+                const meaning_response = (await client.query('SELECT * FROM meanings WHERE word_id = $1', [word.id])).rows[0]
+                api_response.meanings.push(meaning_response)
+                
+            }
+            await client.query ('COMMIT')
+            res.status(200).send(api_response)
+        } catch(err) {
+            await client.query ('ROLLBACK')
+            console.log("Database Error: ", err)
+            res.status(404).send('Internal Server Error during Database Operation.\n')
+        } finally {
+            client.release()
+        }
+    })
+    .post(async (req, res) => {
+        // 1. Validação básica de presença
+        if (!req.body.word || !req.body.meaning) {
+            return res.status(400).send("Your Body Request needs defined word and meaning params.\n");
+        }
 
-    try {
-        await client.query('BEGIN');
+        // 2. Validação Zod
+        const parse_word = Word.safeParse(req.body.word);
+        const parse_meaning = Meaning.safeParse(req.body.meaning);
 
-        const word_query = `
-            INSERT INTO words (term, synonyms, antonyms)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (term) DO UPDATE SET term = EXCLUDED.term 
-            RETURNING id
-        `;
-        
-        const word_res = await client.query(word_query, [
-            parse_word.data.term.toUpperCase(),
-            parse_word.data.synonyms, 
-            parse_word.data.antonyms
-        ]);
-        
-        const wordId = word_res.rows[0].id;
+        if (!parse_word.success) return res.status(400).send(parse_word.error.message);
+        if (!parse_meaning.success) return res.status(400).send(parse_meaning.error.message);
 
-        const meaning_query = `
-            INSERT INTO meanings (word_id, part_of_speech, definition, categories, examples)
-            VALUES ($1, $2, $3, $4, $5)
-        `;
-        const m = parse_meaning.data;
-        await client.query(meaning_query, [
-            wordId, 
-            m.part_of_speech, 
-            m.definition, 
-            m.categories, 
-            m.examples
-        ]);
+        const client = await pool.connect(); 
 
-        await client.query('COMMIT'); 
-        res.status(201).send("Word and Meaning saved successfully!\n");
+        try {
+            await client.query('BEGIN');
 
-    } catch (err) {
-        await client.query('ROLLBACK'); 
-        console.error("Database Error:", err);
-        res.status(500).send("Internal Server Error during database operation.");
-    } finally {
-        client.release(); 
-    }
-});
+            const word_query = `
+                INSERT INTO words (term, synonyms, antonyms)
+                VALUES ($1, $2, $3)
+                ON CONFLICT (term) DO UPDATE SET term = EXCLUDED.term 
+                RETURNING id
+            `;
+            
+            const word_res = await client.query(word_query, [
+                parse_word.data.term.toUpperCase(),
+                parse_word.data.synonyms, 
+                parse_word.data.antonyms
+            ]);
+            
+            const wordId = word_res.rows[0].id;
+
+            const meaning_query = `
+                INSERT INTO meanings (word_id, part_of_speech, definition, categories, examples)
+                VALUES ($1, $2, $3, $4, $5)
+            `;
+            const m = parse_meaning.data;
+            await client.query(meaning_query, [
+                wordId, 
+                m.part_of_speech, 
+                m.definition, 
+                m.categories, 
+                m.examples
+            ]);
+
+            await client.query('COMMIT'); 
+            res.status(201).send("Word and Meaning saved successfully!\n");
+
+        } catch (err) {
+            await client.query('ROLLBACK'); 
+            console.error("Database Error:", err);
+            res.status(500).send("Internal Server Error during database operation.");
+        } finally {
+            client.release(); 
+        }
+    });
 
 app.route('/words/:word')
     .get(async (req, res) => {
-        const searched_word = req.params.word.toUpperCase()
-        const search_query = 'SELECT * FROM words WHERE term = $1'
-        const query_params = [searched_word]
+        const client = await pool.connect()
 
-        const word_table_response = (await pool.query(search_query, query_params)).rows[0]
-        
-        if (word_table_response == null)
-            return res.sendStatus(404)
+        try {
+            await client.query('BEGIN')
+            const word_query = {
+                text: 'SELECT * FROM words WHERE term = $1',
+                values: [req.params.word.toUpperCase()]
+            }
+            
+            const word_response = (await client.query(word_query)).rows[0]
+            const word_id  = word_response.id
 
-        const word_id = word_table_response.id
-        const meanings_query = 'SELECT * FROM meanings WHERE word_id = $1'
-        const meanings_response = (await pool.query(meanings_query, [word_id])).rows[0]
+            const meaning_query = {
+                text: 'SELECT * FROM meanings WHERE word_id = $1',
+                values: [word_id]
+            }
+            const meaning_response = (await client.query(meaning_query)).rows[0]
 
-        const response_final = [word_table_response, meanings_response] 
+            const api_response = {word_response, meaning_response}
 
-        return res.status(200).send(response_final)
+            await client.query('COMMIT')
+            res.status(200).send(api_response)
 
+        } catch(err) {
+            await client.query('ROLLBACK')
+            console.error("Database Error: ", err)
+            res.status(500).send("Internal Server Error during database operation.")
+
+        } finally {
+            client.release()
+        }
     })
 
 
