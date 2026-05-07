@@ -32,18 +32,18 @@ app.route('/words/:word')
         const search_query = 'SELECT * FROM words WHERE term = $1'
         const query_params = [searched_word]
 
-        const response = (await pool.query(search_query, query_params)).rows[0]
+        const word_table_response = (await pool.query(search_query, query_params)).rows[0]
         
-        if (response == null)
+        if (word_table_response == null)
             res.sendStatus(404)
 
-        const word_id = response.id
+        const word_id = word_table_response.id
         const meanings_query = 'SELECT * FROM meanings WHERE id = $1'
         const meanings_response = (await pool.query(meanings_query, [word_id])).rows[0]
 
-        const response_final = {response, meanings_response}
+        const response_final = [word_table_response, meanings_response] 
 
-        res.status(200).send(response_final.response, response_final.meanings_response)
+        res.status(200).send(response_final)
 
     })
     .post(async (req, res) => {
@@ -52,9 +52,11 @@ app.route('/words/:word')
         const response = (await pool.query(query, [word_to_create])).rows[0]
 
         if (response != null) {
-            res.status(444).send("Word already exists in the database!")
+            res.status(444).send("Word already exists in the database!\n")
             return
         }
+
+        const insert_query = 'INSERT INTO words VALUES ($1, $2, $3)'
 
 
     })
