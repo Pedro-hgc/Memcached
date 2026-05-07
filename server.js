@@ -23,20 +23,41 @@ const pool = new Pool({
     password: getDatabasePassword(),
 })
 
-app.get('/api', (req, res) => {
-    res.send(`Hi from Docker swarm! Here looking at MY DICK! YOU BITCHES`)
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-    // Test the connection
-    pool.query('SELECT NOW()', (err, res) => {
-      if (err) {
-        console.error('Database connection failed:', err.stack);
-      } else {
-        console.log('Successfully connected to the database at:', res.rows[0].now);
-      }
-    });
+app.route('/words/:word')
+    .get(async (req, res) => {
+        const searched_word = req.params.word.toUpperCase()
+        const search_query = 'SELECT * FROM words WHERE term = $1'
+        const query_params = [searched_word]
+
+        const response = (await pool.query(search_query, query_params)).rows[0]
+        
+        if (response == null)
+            res.sendStatus(404)
+
+        const word_id = response.id
+        const meanings_query = 'SELECT * FROM meanings WHERE id = $1'
+        const meanings_response = (await pool.query(meanings_query, [word_id])).rows[0]
+
+        const response_final = {response, meanings_response}
+
+        res.status(200).send(response_final.response, response_final.meanings_response)
+
+    })
+    .post(async (req, res) => {
+        const word_to_create = req.params.word.toUpperCase()
+        const query = 'SELECT * FROM words WHERE term = $1'
+        const response = (await pool.query(query, [word_to_create])).rows[0]
+
+        if (response != null) {
+            res.status(444).send("Word already exists in the database!")
+            return
+        }
 
 
-})
+    })
 
 app.listen(port, ()=> {
     console.log(`Dictionary API running at port ${port}`)
