@@ -2,7 +2,7 @@ const express = require('express')
 const router  = express.Router()
 const wordController = require('../controllers/wordController')
 const validate = require('../middleware/validate')
-const {CreateWordRequest} = require('../models/dictionary')
+const {CreateWordRequest, PatchWordRequest} = require('../models/dictionary')
 
 router.route('/')
     .get(wordController.getWords)
@@ -10,6 +10,7 @@ router.route('/')
 
 router.route('/:word')
     .get(wordController.getSpecificWord)
+    .patch(validate(PatchWordRequest), wordController.patchWord)
 
 module.exports = router
 

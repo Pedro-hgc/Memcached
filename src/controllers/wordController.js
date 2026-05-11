@@ -29,3 +29,19 @@ exports.getSpecificWord = async (req, res) => {
         res.status(500).send(`Database Error: ${err}`)
     }
 }
+
+exports.patchWord = async (req, res) => {
+    try {
+        const word = {
+            term: req.params.word,
+            synonyms: req.body.synonyms,
+            antonyms: req.body.antonyms,
+        }
+        const meaning = req.body.meaning
+
+        await wordService.patchWord(word, meaning)
+        res.status(200).send(`Word ${word.term} patched with success!\n`)
+    } catch(err) {
+        res.status(204).send(`Error: ${err}`)
+    }
+}

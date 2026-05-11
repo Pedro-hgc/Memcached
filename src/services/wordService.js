@@ -89,10 +89,33 @@ async function getSpecificWord(word) {
     }
 }
 
-async function updateSpecificWord(patch_word) {
-    return patch_word
+async function patchWord(word, meaning) {
+    const client = await pool.connect()
+
+    try {
+        await client.query('BEGIN')
+        const update_word_query = {
+            text: 'UPDATE words SET synonyms = $1, antonyms = $2 WHERE term = $3 RETURNING id',
+            values: [word.synonyms, word.antonyms, word.term.toUpperCase()]
+        }
+        const response = (await client.query(update_word_query)).rows[0]
+
+        const update_meaning_query = `
+        INSERT INTO meanings (word_id, part_of_speech, definition, categories, examples)
+        VALUES ($1, $2, $3, $4, $5)
+    `
+        await client.query(update_meaning_query, [response.id, meaning.part_of_speech,
+        meaning.definition, meaning.categories, meaning.examples])
+
+        client.query('COMMIT')
+    } catch (err) {
+        client.query('ROLLBACK')
+        throw err;
+    } finally {
+        client.release()
+    }
 }
 
-module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, updateSpecificWord}
+module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, patchWord}
 
 

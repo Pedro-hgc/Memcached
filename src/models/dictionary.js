@@ -18,7 +18,14 @@ const CreateWordRequest = z.object({
     meaning: Meaning
 })
 
-module.exports = {CreateWordRequest}
+const PatchWordRequest = z.object({
+
+    synonyms: z.array(z.string()),
+    antonyms: z.array(z.string()),
+    meaning: Meaning
+})
+
+module.exports = {CreateWordRequest, PatchWordRequest}
 
 
 
