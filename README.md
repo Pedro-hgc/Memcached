@@ -4,7 +4,7 @@ API REST para gerenciamento de palavras, sinônimos, antônimos e significados.
 
 ## Endpoints
 
-### GET /api/words
+### GET /words
 
 Retorna todas as palavras cadastradas.
 
@@ -40,7 +40,7 @@ Database Error
 
 ---
 
-### POST /api/words
+### POST /words
 
 Cria uma nova palavra com seu significado.
 
@@ -92,7 +92,7 @@ Internal Database Error.
 
 ---
 
-### GET /api/words/:word
+### GET /words/:word
 
 Retorna os dados de uma palavra específica (case‑insensitive).
 
@@ -117,7 +117,7 @@ Database Error: <mensagem>
 
 ---
 
-### PATCH /api/words/:word
+### PATCH /words/:word
 
 Atualiza sinônimos, antônimos e/ou significado de uma palavra existente.
 
