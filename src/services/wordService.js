@@ -107,15 +107,38 @@ async function patchWord(word, meaning) {
         await client.query(update_meaning_query, [response.id, meaning.part_of_speech,
         meaning.definition, meaning.categories, meaning.examples])
 
-        client.query('COMMIT')
+        await client.query('COMMIT')
     } catch (err) {
-        client.query('ROLLBACK')
+        await client.query('ROLLBACK')
         throw err;
     } finally {
         client.release()
     }
 }
 
-module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, patchWord}
+async function deleteWord(word) {
+    const client = await pool.connect()
+
+    try {
+        await client.query('BEGIN')
+        console.log (`The word that will be deleted is ${word.toUpperCase()}`)
+
+        const delete_query= {text: 'DELETE FROM words WHERE term = $1', values: [word.toUpperCase()]}
+        const response = await client.query(delete_query)
+
+        if (response.rowCount == 0)
+            throw new Error ("Nothing was deleted because the word doesnt exist in the databse!\n")
+        await client.query('COMMIT')
+
+    } catch(err) {
+        await client.query('ROLLBACK')
+        throw err
+
+    } finally {
+        client.release()
+    }
+}
+
+module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, patchWord, deleteWord}
 
 

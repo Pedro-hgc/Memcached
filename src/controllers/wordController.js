@@ -5,7 +5,7 @@ exports.getWords = async (req, res) => {
         const data = await wordService.getAllWords()
         res.status(200).json(data)
     } catch (err) {
-        res.status(500).send("Database Error")
+        res.status(500).send(`Database error: \n ${err}`)
     }
 }
 
@@ -15,8 +15,7 @@ exports.postWord = async (req, res) => {
         await wordService.createWordWithMeaning(word, meaning)
         res.status(201).send("Word created with Success!")
     } catch (err) {
-        console.error(err)
-        res.status(500).send("Internal Database Error.\n")
+        res.status(500).send(`Database error: \n ${err}`)
     }
 }
 
@@ -26,7 +25,7 @@ exports.getSpecificWord = async (req, res) => {
         res.status(200).json(data)
 
     } catch(err) {
-        res.status(500).send(`Database Error: ${err}`)
+        res.status(500).send(`Database error: \n ${err}`)
     }
 }
 
@@ -42,6 +41,16 @@ exports.patchWord = async (req, res) => {
         await wordService.patchWord(word, meaning)
         res.status(200).send(`Word ${word.term} patched with success!\n`)
     } catch(err) {
-        res.status(204).send(`Error: ${err}`)
+        res.status(500).send(`Database error: \n ${err}`)
+    }
+}
+
+exports.deleteWord = async (req, res) => {
+    try {
+        await wordService.deleteWord(req.params.word)
+        res.status(200).send("The word was successfully deleted!\n")
+
+    } catch(err) {
+        res.status(500).send(`Database error: \n ${err}`)
     }
 }

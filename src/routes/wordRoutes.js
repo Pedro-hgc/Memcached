@@ -11,6 +11,7 @@ router.route('/')
 router.route('/:word')
     .get(wordController.getSpecificWord)
     .patch(validate(PatchWordRequest), wordController.patchWord)
+    .delete(wordController.deleteWord)
 
 module.exports = router
 
