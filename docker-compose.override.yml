@@ -19,8 +19,6 @@ services:
       - ./sample-data.json:/docker-entrypoint-initdb.d/sample-data.json
   cache:
     image: memcached:alpine
-    ports:
-      - "11211:11211"
 
 volumes:
   db_data_dev:
