@@ -8,7 +8,8 @@ async function getAllWords() {
 
     if (data) {
         console.log("\n\nSuccesfully got it all words from the cache!\n\n")
-        return JSON.parse(data)
+        const data_json = JSON.parse(data)
+        return {from_cache: "true", data_json}
     }
 
     const client = await pool.connect()
@@ -96,7 +97,7 @@ async function getSpecificWord(word_param) {
         console.log("Oh yeah got it from the cache baby!!!")
         const word = JSON.parse(word_data)
         const meanings = JSON.parse(meaning_data)
-        return {word, meanings} 
+        return {from_cache: "true", word, meanings} 
     }
              
 
@@ -187,8 +188,11 @@ async function wordOfTheDay() {
     const cache = await getCacheClient()
     const data = await cacheGet(cache, 'words:word-of-the-day')
 
-    if (data) 
-        return JSON.parse(data)
+    if (data) {
+        const data_json = JSON.parse(data)
+        return {from_cache: "true", data_json}
+    }
+
 
     const client = await pool.connect()
     const today = new Date()
