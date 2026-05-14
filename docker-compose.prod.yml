@@ -25,6 +25,8 @@ services:
           - node.labels.is-db == true
   cache:
     deploy:
+      mode: replicated
+      replicas: 3
       endpoint_mode: dnsrr
       placement:
         constraints:
