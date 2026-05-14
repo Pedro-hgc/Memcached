@@ -64,24 +64,24 @@ async function createWordWithMeaning(wordData, meaningData) {
     }
 }
 
-async function getSpecificWord(word) {
+async function getSpecificWord(word_param) {
     const client = await pool.connect()
 
     try {
         const word_query = {
             text: 'SELECT * FROM words WHERE term = $1',
-            values: [word.toUpperCase()]
+            values: [word_param.toUpperCase()]
         }
-        const word_res = (await client.query(word_query)).rows[0]
+        const word = (await client.query(word_query)).rows[0]
 
         const meanings_query = {
             text: 'SELECT * FROM meanings WHERE word_id = $1',
-            values: [word_res.id]
+            values: [word.id]
         }
 
-        const meanings_res = (await client.query(meanings_query)).rows
+        const meanings = (await client.query(meanings_query)).rows[0]
 
-        return [word_res, meanings_res]
+        return {word, meanings}
     } catch(err) {
         throw err;
     } finally {
@@ -139,6 +139,40 @@ async function deleteWord(word) {
     }
 }
 
-module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, patchWord, deleteWord}
+async function wordOfTheDay() {
+    const client = await pool.connect()
+    const today = new Date()
+    const day = today.getDate()
+    const month = today.getMonth()
+    const year = today.getFullYear()
+
+    const date_num = day * month * year;
+    console.log(`Number of the day is ${date_num}\n`)
+
+    try {
+        const all_words_query = 'SELECT * FROM words'
+        const all_words_response = await client.query(all_words_query)
+
+        const day_word_id = date_num % all_words_response.rowCount
+        const word = all_words_response.rows[day_word_id]
+
+        const meaning_query = {
+            text: 'SELECT * FROM meanings WHERE word_id = $1',
+            values: [word.id]
+        }
+        const meaning = (await client.query(meaning_query)).rows[0]
+        
+        return {word, meaning}
+
+    } catch (err) {
+        throw err
+
+    } finally {
+        client.release()
+    }
+}
+
+module.exports = {getAllWords, createWordWithMeaning, getSpecificWord, patchWord, deleteWord, wordOfTheDay}
+
 
 

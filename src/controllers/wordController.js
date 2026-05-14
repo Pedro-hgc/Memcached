@@ -54,3 +54,12 @@ exports.deleteWord = async (req, res) => {
         res.status(500).send(`Database error: \n ${err}`)
     }
 }
+exports.wordOfTheDay = async (req, res) => {
+    console.log (`Inside word of the day controller!\n`)
+    try {
+        const response = await wordService.wordOfTheDay()
+        res.status(200).json(response)
+    } catch(err) {
+        res.status(500).send("Wasn't possible to get the Word of The day!")
+    }
+}
