@@ -214,7 +214,7 @@ def main():
 
     env = sys.argv[1]
     base_url = get_base_url(env)
-    num_threads = int(os.cpu_count() / 4)
+    num_threads = 2
 
     print(f"\nAmbiente : {env}")
     print(f"Endereço : {base_url}")
