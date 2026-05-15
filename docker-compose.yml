@@ -12,6 +12,7 @@ services:
       - swarm_net
   cache:
     image: memcached:alpine
+    command: memcached -I 25m
     networks:
       - swarm_net
 
