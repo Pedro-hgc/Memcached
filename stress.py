@@ -103,6 +103,7 @@ class PhaseStats:
 
 
 def do_request(base_url: str, stats: PhaseStats):
+    random.seed()
     method = random.choice(METHODS)
     term, entry, meaning = get_random_entry()
     word = term.lower()
