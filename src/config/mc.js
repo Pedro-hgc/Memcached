@@ -19,7 +19,7 @@ async function getMemcachedServers() {
     } catch (err) {                                                                                                                                                                             
         // Fallback: usa o hostname original (funciona em dev com Docker)                                                                                                                       
         console.warn(`DNS resolution failed for ${host}, using original hostname: ${err.message}`)                                                                                              
-        return [MEMCACHED_HOST]                                                                                                                                                                 
+        return false                                                                                                                                                                
     }                                                                                                                                                                                           
 }       
 
@@ -37,6 +37,7 @@ function create(server_list)  {
 
 async function getCacheClient() {                                                                                                                                                               
     const servers = await getMemcachedServers()                                                                                                                                                 
+    if (!servers) return false
     console.log(`MAPPED IPS: \n\n${servers}`)
     if (servers.length == 0) 
         return create(MEMCACHED_HOST)
