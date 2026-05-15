@@ -6,17 +6,17 @@ import threading
 import requests
 import os
 
-PROD_IP = "34.39.248.169"  # defina o IP da máquina X aqui
+PROD_IP = "192.168.1.100"  # defina o IP da máquina X aqui
 
-PHASE_DURATION = 15        # segundos por etapa
-INTERVAL = 0.05            # 50ms entre requisições por thread
+MAX_REQUESTS = 10          # requisições máximas por thread por etapa
+INTERVAL = 0.25            # 250ms entre requisições por thread
 
 
 def get_base_url(env: str) -> str:
     if env == "dev":
         return "http://localhost:3000"
     elif env == "prod":
-        return f"http://{PROD_IP}:80"
+        return f"http://{PROD_IP}:3000"
     else:
         raise ValueError(f"Ambiente inválido: '{env}'. Use 'dev' ou 'prod'.")
 
@@ -103,7 +103,6 @@ class PhaseStats:
 
 
 def do_request(base_url: str, stats: PhaseStats):
-    random.seed()
     method = random.choice(METHODS)
     term, entry, meaning = get_random_entry()
     word = term.lower()
@@ -145,32 +144,28 @@ def do_request(base_url: str, stats: PhaseStats):
         print(f"[{threading.current_thread().name}] ERRO: {e}")
 
 
-def thread_worker(base_url: str, stats: PhaseStats, stop_event: threading.Event):
-    while not stop_event.is_set():
+def thread_worker(base_url: str, stats: PhaseStats):
+    for _ in range(MAX_REQUESTS):
         do_request(base_url, stats)
         time.sleep(INTERVAL)
 
 
 def run_phase(base_url: str, phase_name: str, num_threads: int) -> PhaseStats:
     stats = PhaseStats(phase_name)
-    stop_event = threading.Event()
 
     threads = []
     for i in range(num_threads):
         t = threading.Thread(
             target=thread_worker,
-            args=(base_url, stats, stop_event),
+            args=(base_url, stats),
             name=f"{phase_name}-W{i + 1}",
             daemon=True,
         )
         t.start()
         threads.append(t)
 
-    time.sleep(PHASE_DURATION)
-    stop_event.set()
-
     for t in threads:
-        t.join(timeout=2)
+        t.join()
 
     return stats
 
@@ -225,11 +220,11 @@ def main():
     print(f"Endereço : {base_url}")
     print(f"Threads  : {num_threads}")
     print(f"Intervalo: {int(INTERVAL * 1000)}ms por thread")
-    print(f"Duração  : {PHASE_DURATION}s por etapa\n")
+    print(f"Requests : {MAX_REQUESTS} por thread por etapa\n")
 
     # ── ETAPA 1: memcached ON ─────────────────────────────────────
     print("▶  ETAPA 1 — Memcached LIGADO")
-    print(f"   Rodando por {PHASE_DURATION} segundos...\n")
+    print(f"   {num_threads} threads x {MAX_REQUESTS} requests...\n")
 
     stats1 = run_phase(base_url, "ETAPA 1 — Memcached LIGADO", num_threads)
 
@@ -240,7 +235,7 @@ def main():
 
     # ── ETAPA 2: memcached OFF ────────────────────────────────────
     print("\n▶  ETAPA 2 — Memcached DESLIGADO")
-    print(f"   Rodando por {PHASE_DURATION} segundos...\n")
+    print(f"   {num_threads} threads x {MAX_REQUESTS} requests...\n")
 
     stats2 = run_phase(base_url, "ETAPA 2 — Memcached DESLIGADO", num_threads)
 
