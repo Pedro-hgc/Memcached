@@ -1,6 +1,6 @@
 const pool = require('../config/db')
 const {getCacheClient} = require('../config/mc')
-const {cacheGet, cacheSet} = require ('../helpers/cache')
+const {cacheGet, cacheSet, cacheDel} = require ('../helpers/cache')
 
 async function getAllWords() {
     const cache = await getCacheClient() 
