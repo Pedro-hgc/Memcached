@@ -29,7 +29,8 @@ function create(server_list)  {
         retries: 3,
         retry: 1000,
         timeout: 500,
-        poolSize: 10
+        poolSize: 10,
+        maxValue: 30 * 1024 * 1024
     })
     
 }
