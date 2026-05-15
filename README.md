@@ -229,7 +229,7 @@ npm install
 npm start
 ```
 
-O servidor será iniciado na porta definida em `PORT` (padrão 8080).
+O servidor será iniciado na porta definida em `PORT` (padrão 3000).
 
 ---
 
