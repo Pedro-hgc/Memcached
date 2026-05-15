@@ -4,12 +4,13 @@ const {cacheGet, cacheSet, cacheDel} = require ('../helpers/cache')
 
 async function getAllWords() {
     const cache = await getCacheClient() 
-    const data = await cacheGet(cache, 'words:all')
-
-    if (data) {
-        console.log("\n\nSuccesfully got it all words from the cache!\n\n")
-        const data_json = JSON.parse(data)
-        return {from_cache: "true", data_json}
+    if (cache) {
+        const data = await cacheGet(cache, 'words:all')
+        if (data) {
+            console.log("\n\nSuccesfully got it all words from the cache!\n\n")
+            const data_json = JSON.parse(data)
+            return {from_cache: "true", data_json}
+        }
     }
 
     const client = await pool.connect()
@@ -28,7 +29,7 @@ async function getAllWords() {
             api_response.meanings.push(meaning_response)
             
         }
-        await cacheSet(cache, 'words:all', api_response)
+        if (cache) await cacheSet(cache, 'words:all', api_response)
         return api_response
     } finally {
         client.release()
@@ -74,8 +75,10 @@ async function createWordWithMeaning(wordData, meaningData) {
 
         const meanings = meaning_res.rows
 
-        await cacheSet(cache, `words:${wordData.term}`, word)
-        await cacheSet(cache, `meanings:${wordData.term}`, meanings)
+        if (cache) {
+            await cacheSet(cache, `words:${wordData.term}`, word)
+            await cacheSet(cache, `meanings:${wordData.term}`, meanings)
+        }
 
         await client.query('COMMIT');
 
@@ -90,16 +93,17 @@ async function createWordWithMeaning(wordData, meaningData) {
 async function getSpecificWord(word_param) {
     const cache = await getCacheClient()
 
-    const word_data = await cacheGet(cache,`words:${word_param.toUpperCase()}`)
-    const meaning_data = await cacheGet(cache,`meanings:${word_param.toUpperCase()}`)
+    if (cache) {
+        const word_data = await cacheGet(cache,`words:${word_param.toUpperCase()}`)
+        const meaning_data = await cacheGet(cache,`meanings:${word_param.toUpperCase()}`)
 
-    if (word_data && meaning_data) {
-        console.log("Oh yeah got it from the cache baby!!!")
-        const word = JSON.parse(word_data)
-        const meanings = JSON.parse(meaning_data)
-        return {from_cache: "true", word, meanings} 
+        if (word_data && meaning_data) {
+            console.log("Oh yeah got it from the cache baby!!!")
+            const word = JSON.parse(word_data)
+            const meanings = JSON.parse(meaning_data)
+            return {from_cache: "true", word, meanings} 
+        }
     }
-             
 
     const client = await pool.connect()
     try {
@@ -117,8 +121,10 @@ async function getSpecificWord(word_param) {
 
         const meanings = (await client.query(meanings_query)).rows
 
-        await cacheSet(cache, `words:${word.term}`, word)
-        await cacheSet(cache, `meanings:${word.term}`, meanings)
+        if (cache) {
+            await cacheSet(cache, `words:${word.term}`, word)
+            await cacheSet(cache, `meanings:${word.term}`, meanings)
+        }
 
         return {word, meanings}
     } catch(err) {
@@ -147,7 +153,7 @@ async function patchWord(word, meaning) {
         await client.query(update_meaning_query, [response.id, meaning.part_of_speech,
         meaning.definition, meaning.categories, meaning.examples])
 
-        await cacheSet(cache, `words:${word.term.toUpperCase()}`, {word, meaning})
+        if (cache) await cacheSet(cache, `words:${word.term.toUpperCase()}`, {word, meaning})
         await client.query('COMMIT')
     } catch (err) {
         await client.query('ROLLBACK')
@@ -172,7 +178,7 @@ async function deleteWord(word) {
             throw new Error ("Nothing was deleted because the word doesnt exist in the databse!\n")
 
 
-        await cacheDel(cache, word.toUpperCase())
+        if (cache) await cacheDel(cache, word.toUpperCase())
         await client.query('COMMIT')
 
     } catch(err) {
@@ -186,13 +192,13 @@ async function deleteWord(word) {
 
 async function wordOfTheDay() {
     const cache = await getCacheClient()
-    const data = await cacheGet(cache, 'words:word-of-the-day')
-
-    if (data) {
-        const data_json = JSON.parse(data)
-        return {from_cache: "true", data_json}
+    if (cache) {
+        const data = await cacheGet(cache, 'words:word-of-the-day')
+        if (data) {
+            const data_json = JSON.parse(data)
+            return {from_cache: "true", data_json}
+        }
     }
-
 
     const client = await pool.connect()
     const today = new Date()
@@ -217,7 +223,7 @@ async function wordOfTheDay() {
         }
         const meaning = (await client.query(meaning_query)).rows[0]
         
-        await cacheSet(cache, 'words:word-of-the-day', {word, meaning})
+        if (cache) await cacheSet(cache, 'words:word-of-the-day', {word, meaning})
         return {word, meaning}
 
     } catch (err) {
