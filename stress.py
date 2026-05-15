@@ -6,7 +6,7 @@ import threading
 import requests
 import os
 
-PROD_IP = "192.168.1.100"  # defina o IP da máquina X aqui
+PROD_IP = "34.39.248.169"  # defina o IP da máquina X aqui
 
 MAX_REQUESTS = 10          # requisições máximas por thread por etapa
 INTERVAL = 0.25            # 250ms entre requisições por thread
