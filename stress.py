@@ -16,7 +16,7 @@ def get_base_url(env: str) -> str:
     if env == "dev":
         return "http://localhost:3000"
     elif env == "prod":
-        return f"http://{PROD_IP}:3000"
+        return f"http://{PROD_IP}:80"
     else:
         raise ValueError(f"Ambiente inválido: '{env}'. Use 'dev' ou 'prod'.")
 
