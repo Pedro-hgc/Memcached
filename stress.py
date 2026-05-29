@@ -8,8 +8,9 @@ import os
 
 PROD_IP = "34.39.248.169"  # defina o IP da máquina X aqui
 
-MAX_REQUESTS = 10          # requisições máximas por thread por etapa
-INTERVAL = 0.25            # 250ms entre requisições por thread
+MAX_REQUESTS = 25          # requisições máximas por thread por etapa
+INTERVAL = 0.250            # 250ms entre requisições por thread
+TIMEOUT_REQ=5
 
 
 def get_base_url(env: str) -> str:
@@ -25,7 +26,7 @@ with open("sample-data.json", encoding="utf-8") as f:
     SAMPLE_DATA = json.load(f)
 
 WORDS = list(SAMPLE_DATA.keys())
-METHODS = ["GET_WORD", "GET_WORD_OF_THE_DAY", "GET_ALL", "POST", "PATCH", "DELETE"]
+METHODS = ["GET_WORD", "GET_WORD_OF_THE_DAY"]
 
 
 def get_random_entry():
@@ -102,28 +103,31 @@ class PhaseStats:
         return max(self.response_times) if self.response_times else 0
 
 
-def do_request(base_url: str, stats: PhaseStats):
-    method = random.choice(METHODS)
-    term, entry, meaning = get_random_entry()
+def do_request(base_url: str, stats: PhaseStats, action: dict):
+    method = action["method"]
+    term = action["term"]
+    entry = action["entry"]
+    meaning = action["meaning"]
     word = term.lower()
+
 
     try:
         start = time.perf_counter()
 
         if method == "GET_WORD":
-            r = requests.get(f"{base_url}/words/{word}")
+            r = requests.get(f"{base_url}/words/{word}", timeout=TIMEOUT_REQ)
         elif method == "GET_WORD_OF_THE_DAY":
-            r = requests.get(f"{base_url}/words/word-of-the-day")
+            r = requests.get(f"{base_url}/words/word-of-the-day",timeout=TIMEOUT_REQ )
         elif method == "GET_ALL":
-            r = requests.get(f"{base_url}/words")
+            r = requests.get(f"{base_url}/words", timeout=TIMEOUT_REQ)
         elif method == "POST":
             body = build_create_body(term, entry, meaning)
-            r = requests.post(f"{base_url}/words/{word}", json=body)
+            r = requests.post(f"{base_url}/words/{word}", json=body, timeout=TIMEOUT_REQ)
         elif method == "PATCH":
             body = build_patch_body(entry, meaning)
-            r = requests.patch(f"{base_url}/words/{word}", json=body)
+            r = requests.patch(f"{base_url}/words/{word}", json=body, timeout=TIMEOUT_REQ)
         elif method == "DELETE":
-            r = requests.delete(f"{base_url}/words/{word}")
+            r = requests.delete(f"{base_url}/words/{word}", timeout=TIMEOUT_REQ)
 
         elapsed_ms = (time.perf_counter() - start) * 1000
 
@@ -144,20 +148,20 @@ def do_request(base_url: str, stats: PhaseStats):
         print(f"[{threading.current_thread().name}] ERRO: {e}")
 
 
-def thread_worker(base_url: str, stats: PhaseStats):
-    for _ in range(MAX_REQUESTS):
-        do_request(base_url, stats)
+def thread_worker(base_url: str, stats: PhaseStats, actions: list):
+    for action in actions :
+        do_request(base_url, stats, action)
         time.sleep(INTERVAL)
 
 
-def run_phase(base_url: str, phase_name: str, num_threads: int) -> PhaseStats:
+def run_phase(base_url: str, phase_name: str, num_threads: int, workload: list) -> PhaseStats:
     stats = PhaseStats(phase_name)
 
     threads = []
     for i in range(num_threads):
         t = threading.Thread(
             target=thread_worker,
-            args=(base_url, stats),
+            args=(base_url, stats, workload[i]),
             name=f"{phase_name}-W{i + 1}",
             daemon=True,
         )
@@ -169,6 +173,25 @@ def run_phase(base_url: str, phase_name: str, num_threads: int) -> PhaseStats:
 
     return stats
 
+
+def generate_workload(num_threads: int, requests_per_thread: int):
+    workload = []
+
+    for _ in range (num_threads):
+        thread_actions = []
+        for _ in range (requests_per_thread):
+            method = random.choice(METHODS)
+            term, entry, meaning = get_random_entry()
+            thread_actions.append({
+                "method": method,
+                "term": term,
+                "entry": entry,
+                "meaning": meaning
+                })
+        workload.append(thread_actions)
+
+    return workload
+        
 
 def print_stats(stats: PhaseStats):
     print(f"\n{'='*55}")
@@ -214,8 +237,11 @@ def main():
 
     env = sys.argv[1]
     base_url = get_base_url(env)
-    num_threads = 2
+    num_threads = 4
 
+    workload = generate_workload( num_threads, MAX_REQUESTS )
+    print(workload)
+    input()
     print(f"\nAmbiente : {env}")
     print(f"Endereço : {base_url}")
     print(f"Threads  : {num_threads}")
@@ -226,7 +252,7 @@ def main():
     print("▶  ETAPA 1 — Memcached LIGADO")
     print(f"   {num_threads} threads x {MAX_REQUESTS} requests...\n")
 
-    stats1 = run_phase(base_url, "ETAPA 1 — Memcached LIGADO", num_threads)
+    stats1 = run_phase(base_url, "ETAPA 1 — Memcached LIGADO", num_threads, workload)
 
     print_stats(stats1)
     print("⏸  Etapa 1 concluída.")
@@ -237,7 +263,7 @@ def main():
     print("\n▶  ETAPA 2 — Memcached DESLIGADO")
     print(f"   {num_threads} threads x {MAX_REQUESTS} requests...\n")
 
-    stats2 = run_phase(base_url, "ETAPA 2 — Memcached DESLIGADO", num_threads)
+    stats2 = run_phase(base_url, "ETAPA 2 — Memcached DESLIGADO", num_threads, workload)
 
     print_stats(stats2)
     print_comparison(stats1, stats2)
